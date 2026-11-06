@@ -146,7 +146,7 @@ const CATS=[['선풍기','🌀'],['전기포트','♨️'],['믹서기','🥤'],
 const GR=['신규','인증','마스터'],LV={선풍기:0,전기포트:0,토스터:0,믹서기:1,청소기:1,기타:2};
 const BASE={선풍기:15000,전기포트:18000,믹서기:22000,청소기:35000,토스터:16000,기타:25000};
 const TM=['오전 9시~낮 12시','오후 1시~6시','저녁 6시~9시','종일 가능'],WK=['부품 교체','청소·점검','모터·회로 수리','기타 수리'],WHY=['부품 단종','수리비가 제품값보다 커요','고장이 너무 심해요'];
-const WAR=1000,DIAG=5000,ME=1,TG=1,NEED=[50,4.8],CAP=50000,RENT=10000,SUBP=5000,PLANS=[[3,'3개월'],[6,'6개월'],[12,'1년']];
+const WAR=1000,DIAG=5000,ME=1,TG=1,NEED=[50,4.8],CAP=50000,RENT=30000,SUBP=4000,PLANS=[[3,'3개월',5000,0],[6,'6개월',4500,1],[12,'1년',4000,2]];
 const fee=f=>Math.round(f*.03),rg=b=>[Math.round(b*.8/100)*100,Math.round(b*1.2/100)*100];
 const R=(s,t)=>({s,t});
 const techs=[
@@ -183,7 +183,7 @@ function reqChat(id){const r=S.reqs.find(x=>x.id==id);openTh(thr(r.tech||techs[r
 function techChat(id){const r=S.reqs.find(x=>x.id==id);openTh(thr('박정호',r.item,r.who).id)}
 function bannerHtml(){const b=S.banner;if(!b||S.role!='c')return '';if(!b.t0){b.t0=1;setTimeout(()=>{if(S.banner===b){S.banner=null;draw()}},4500)}
  return `<div class="nb" onclick="openTh('${b.id}')"><div class="av" style="width:38px;height:38px;font-size:19px;flex:none">${(techs.find(x=>x.n==b.name)||{i:'🧓'}).i}</div><div class="grow"><b>${esc(b.name)} 기술자</b><div class="pv" style="color:#d6dcf0">${esc(b.text)}</div></div><span style="font-size:11px;opacity:.7">지금</span></div>`}
-const S={role:'c',tab:'home',sh:0,toast:'',openTech:null,typing:0,online:true,det:null,lt:'',cur:null,banner:null,fin:0,rvId:null,payId:null,pw:0,rvt:'',pt:null,est:0,sub:0,work:'',why:'',rv:[5,5,5],ph:{b:'',a:''},
+const S={role:'c',tab:'home',sh:0,toast:'',openTech:null,typing:0,online:true,det:null,lt:'',cur:null,banner:null,fin:0,rvId:null,payId:null,pw:0,rvt:'',pt:null,est:0,sub:0,subAt:0,work:'',why:'',rv:[5,5,5],ph:{b:'',a:''},
 d:{item:'선풍기',ds:'',ph:[],lb:'',md:'',tm:3,tid:ME},
 reqs:[{id:1,who:'이지은',item:'선풍기',desc:'회전이 안 되고 소리가 나요',est:18000,st:'매칭중',dist:'0.6km',tid:ME,tm:TM[0]},{id:2,who:'정민수',item:'전기포트',desc:'전원이 안 켜집니다',est:20000,st:'매칭중',dist:'1.2km',tid:ME,tm:TM[3]},{id:3,who:'한소영',item:'믹서기',desc:'칼날이 헛돌아요',est:24000,st:'매칭중',dist:'2.0km',tid:ME,tm:TM[1]}],
 th:TH0,settle:[{d:'10/28',item:'청소기',amt:35000,w:'모터·회로 수리',s:2},{d:'10/30',item:'토스터',amt:16000,w:'부품 교체',s:2},{d:'11/01',item:'선풍기',amt:15000,w:'청소·점검',s:1}]};
@@ -294,11 +294,14 @@ function vTech(){
   <h2>후기</h2>${revs(t)}</div>`}
  return hd('GPS 동네 인증 · 신분증·경력 확인 완료','근처 은퇴 기술자')+`<div class="body">`+rec('선풍기').map(t=>`<div class="card row" onclick="S.openTech=${t.i};draw()" style="cursor:pointer"><div class="av">${techs[t.i].i}</div><div class="grow"><b>${t.n}</b> <span class="tag">${GR[t.g]}</span><div class="sub">${t.b}</div><div class="stars" style="margin-top:3px">${stars(t.r)} <span class="sub">${t.r} (${t.c})</span></div></div><div class="sub">${t.d}km</div></div>`).join('')+`</div>`;
 }
+const fd=d=>(d.getMonth()+1)+'/'+d.getDate();
+function subRange(n,st){const a=new Date(st),b=new Date(a.getFullYear(),a.getMonth()+n,a.getDate());b.setDate(b.getDate()-1);return fd(a)+' ~ '+fd(b)}
+function subscribe(n){if(S.sub&&S.sub!=n){toast('약정 기간에는 플랜을 바꿀 수 없어요');return}if(S.sub==n)return;S.sub=n;S.subAt=Date.now();toast('구독이 시작됐어요 · 최소 '+n+'개월 약정')}
 function vSubs(){
- return hd('수리 구독','구독')+`<div class="body"><div class="card" style="background:linear-gradient(135deg,#122a63,#2b52a6);color:#fff"><b style="font-size:17px">월 ${won(SUBP)}, 수리비 걱정 끝</b><div style="opacity:.85;margin-top:4px;font-size:13px">구독 중에는 무상 수리 · 수리비 ${won(CAP)} 이내 (초과분은 본인 부담)</div></div>
- ${S.sub?`<div class="card"><span class="tag">구독 중</span> <b>${S.sub}개월 약정</b><div class="sub">결제 때 무상 수리 혜택이 자동 적용돼요</div></div>`:''}<h2>구독 플랜 <span class="sub">월 ${won(SUBP)} · 최소 3개월</span></h2>`+
- PLANS.map(([n,l])=>`<div class="card row"><div class="grow"><b>${l} 구독</b><div class="sub">월 ${won(SUBP)} · 총 ${won(SUBP*n)}<br>무상 수리 · 수리비 ${won(CAP)} 이내</div></div><button class="btn sm ${S.sub==n?'g':''}" onclick="S.sub=${n};draw()">${S.sub==n?'구독 중':'구독하기'}</button></div>`).join('')+
- `</div>`;
+ return hd('수리 구독','구독')+`<div class="body"><div class="card" style="background:linear-gradient(135deg,#122a63,#2b52a6);color:#fff"><b style="font-size:17px">월 5,000원 · 오래 쓸수록 월 ${won(SUBP)}까지</b><div style="opacity:.85;margin-top:4px;font-size:13px">구독 중에는 무상 수리 · 수리비 ${won(CAP)} 이내 (초과분은 본인 부담)</div></div>
+ ${S.sub?`<div class="card"><span class="tag">구독 중</span> <b>${S.sub}개월 약정</b><div class="sub">이용 ${subRange(S.sub,S.subAt)} · 약정 기간에는 해지할 수 없어요<br>결제 때 무상 수리 혜택이 자동 적용돼요</div></div>`:''}<h2>구독 플랜 <span class="sub">가입일부터 최소 약정</span></h2>`+
+ PLANS.map(([n,l,pm,ck])=>`<div class="card row"><div class="grow"><b>${l} 플랜</b><div class="sub">월 ${won(pm)}${ck?` + 무료 점검 ${ck}회`:''} (총 ${won(pm*n)})<br>최소 ${l} 약정 · 중도 해지 불가<br>무상 수리 · 수리비 ${won(CAP)} 이내</div></div><button class="btn sm ${S.sub==n?'g':''}" onclick="subscribe(${n})">${S.sub==n?'구독 중':'구독하기'}</button></div>`).join('')+
+ `<div class="sub" style="margin:4px 2px">예) 10/1에 3개월 플랜 가입 → 10/1·11/1·12/1 결제, 12/31까지 이용해요. 약정 기간에는 해지할 수 없어요.</div></div>`;
 }
 /* ===== 채팅 ===== */
 function vChat(){
@@ -310,9 +313,27 @@ function vThread(th){const c=S.role=='c',q=c?['견적 알려주세요','방문 �
  return `<div class="top" style="display:flex;align-items:center;gap:8px"><button class="btn sm g" style="padding:9px 10px" onclick="S.cur=null;draw()">${ic('back')}</button><div class="grow"><small>${esc(th.item)} 상담</small><div style="font-size:20px;font-weight:700">${esc(c?th.tech+' 기술자':th.cust+' 고객님')}</div></div></div><div class="body"><div class="day">${th.day}</div>`+
  th.msgs.map(m=>{if(m.f=='s')return `<div class="sysm">${esc(m.t)}${(m.img||[]).map(p=>`<img src="${p}" alt="">`).join('')}</div>`;const me=(m.f=='c')==c;return `<div class="m ${me?'me':''}"><div class="bub">${(m.img||[]).map(p=>`<img src="${p}" alt="">`).join('')}${esc(m.t||'')}</div><small>${m.tm}</small></div>`}).join('')+(S.typing==th.id?`<div class="m"><div class="bub typ"><i></i><i></i><i></i></div></div>`:'')+`</div><div class="chips">${q.map(x=>`<button class="chip" onclick="sendMsg('${x}')">${x}</button>`).join('')}</div><div class="send"><input id="ci" placeholder="메시지 입력" onkeydown="if(event.key==='Enter')sendMsg()"><button onclick="sendMsg()">${ic('send')}</button></div>`;
 }
+function timeReply(t,c){const m=t.match(/(오전|오후|저녁|밤|새벽|낮)?\s*(\d{1,2})\s*시(?!간)(?:\s*(반)|\s*(\d{1,2})\s*분)?/);if(!m)return '';
+ let h=+m[2],ap=m[1];if(h>24)return '';
+ if(ap=='오후'||ap=='저녁'||ap=='밤'){if(h<12)h+=12}else if(ap=='오전'||ap=='새벽'){if(h==12)h=0}else if(h<=8)h+=12;
+ const mi=m[3]?'30분':m[4]?m[4]+'분':'',day=(t.match(/오늘|내일|모레|월요일|화요일|수요일|목요일|금요일|토요일|일요일|주말/)||[''])[0],lab=(day?day+' ':'')+(h<12?'오전 ':'오후 ')+(h%12||12)+'시'+(mi?' '+mi:'');
+ if(!c)return h>=9&&h<21?'네, '+lab+' 괜찮아요. 기다리겠습니다.':'';
+ if(h>=21||h<9)return lab+(h>=21?'는 너무 늦어서 어려워요.':'는 너무 이른 시간이라 어려워요.')+' 방문은 오전 9시~오후 9시 사이로 부탁드려요.';
+ return '네, '+lab+' 가능해요. 그때 뵙겠습니다.'}
+function autoReply(c,t){const k=a=>a.some(w=>t.includes(w));const tr=timeReply(t,c);if(tr)return tr;
+ if(c){if(k(['견적','가격','얼마','비용']))return '사진 기준으로 예상 견적 범위 안에서 확정 견적을 보내드릴게요. 콜을 보내주시면 바로 확인합니다.';
+  if(k(['시간','언제','방문','픽업']))return '내일 오전이나 모레 오후 1시 이후 가능해요. 편하신 시간대를 알려주세요.';
+  if(k(['사진','모델']))return '사진 확인했어요. 모델명이 보이게 한 장만 더 부탁드려요.';
+  if(k(['고마','감사']))return '네, 필요하시면 언제든 말씀 주세요.';
+  if(k(['부품','교체','고장','안돼','안 돼','작동']))return '증상 말씀 감사해요. 부품 교체가 필요한지는 직접 보고 판단해야 해서, 방문해서 점검해 보겠습니다.';
+  return '네, 확인했습니다. 말씀해주신 내용으로 맞춰서 진행할게요.'}
+ if(k(['견적','가격','비용']))return '네, 확인했어요. 안전결제로 진행하겠습니다.';
+ if(k(['시간','언제','방문','오전','오후']))return '네, 그 시간 괜찮아요. 기다리겠습니다.';
+ if(k(['사진']))return '네, 사진 바로 올릴게요.';
+ return '네, 알겠습니다. 감사합니다!'}
 function sendMsg(t){const i=document.getElementById('ci');t=t||(i&&i.value.trim());if(!t)return;if(i)i.value='';
  const th=S.th.find(x=>x.id==S.cur);if(!th)return;const c=S.role=='c';pushMsg(th,c?'c':'t',t);S.typing=th.id;draw();
- setTimeout(()=>{S.typing=0;pushMsg(th,c?'t':'c',c?'네, 확인했습니다. 곧 자세히 안내드릴게요.':'감사합니다! 오늘 오후 3시 이후 괜찮아요.');draw()},1300)}
+ setTimeout(()=>{S.typing=0;pushMsg(th,c?'t':'c',autoReply(c,t));draw()},1300)}
 /* ===== 기술자 (콜 목록 → 콜 상세 → 완료 입력) ===== */
 function vList(){
  const calls=S.reqs.filter(r=>r.st=='매칭중'&&r.tid==ME&&!r.rej).filter(r=>LV[r.item]<=TG),jobs=S.reqs.filter(r=>r.tech=='박정호'&&['결제대기','방식선택','예약확정','수리중','확인대기'].includes(r.st));
@@ -360,7 +381,7 @@ function vPay(){
  <div class="card"><b>사후관리 지표</b>${M.map(([l,v,lim])=>`<div class="sum"><span class="sub">${l} ${v}% / 기준 ${lim}%</span><span class="tag ${v>lim?'w':''}">${v>lim?'노출 제한':'정상'}</span></div>`).join('')}<div class="sub" style="margin-top:4px">기준 미달 시 노출 제한, 지속되면 퇴출돼요</div></div>
  <div class="card row"><div class="av">🧰</div><div class="grow"><b>공구 대여비</b><div class="sub">월 ${won(RENT)} · 매월 1일 자동 결제 · 다음 결제 12/01</div></div><span class="tag">이용 중</span></div>
  <div class="card"><div class="sub">지급 완료</div><div class="big">${won(paid)}</div><div class="sum"><span class="sub">보증기간 후 지급 예정 (10%)</span><b>${won(held)}</b></div><div class="sum"><span class="sub">🔒 안전결제 보관 중</span><b>${won(hold)}</b></div><div class="sub" style="margin-top:6px">기술자 수수료 0원 (매칭수수료 3%는 소비자 부담) · 후기는 정산과 별개로 평판에만 반영돼요</div></div>
- <h2>정산 내역</h2>`+S.settle.map((s,i)=>{const rr=s.rid&&S.reqs.find(x=>x.id==s.rid);return `<div class="card"><div class="row"><div class="grow"><b>${esc(s.item)}</b><div class="sub">${s.d} · ${esc(s.w)} · ${won(s.amt)}${rr&&rr.rv?' · ★ '+rr.rv:''}</div></div><span class="tag ${s.s==1?'w':''}">${s.s==1?'보증 대기':'지급 완료'}</span></div>${s.s==1?`<div class="sub" style="margin-top:6px">90% ${won(n90(s.amt))} 지급됨 · 잔여 ${won(s.amt-n90(s.amt))}는 7일 보증 후 지급</div><div style="height:8px"></div><button class="btn sm g" onclick="S.settle[${i}].s=2;draw()">보증 종료 처리 (데모)</button>`:''}</div>`}).join('')+`</div>`;
+ <h2>정산 내역</h2>`+S.settle.map((s,i)=>{const rr=s.rid&&S.reqs.find(x=>x.id==s.rid);return `<div class="card"><div class="row"><div class="grow"><b>${esc(s.item)}</b><div class="sub">${s.d} · ${esc(s.w)} · ${won(s.amt)}${rr&&rr.rv?' · ★ '+rr.rv:''}</div></div><span class="tag ${s.s==1?'w':''}">${s.s==1?'보증 대기':'지급 완료'}</span></div>${s.s==1?`<div class="sub" style="margin-top:6px">90% ${won(n90(s.amt))} 지급됨 · 잔여 ${won(s.amt-n90(s.amt))}는 7일 보증 후 지급</div>`:''}</div>`}).join('')+`</div>`;
 }
 setRole('c');setInterval(()=>{document.getElementById('clk').textContent=now()},30000);
 </script>
